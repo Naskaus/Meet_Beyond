@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Voucher Wallet</title>
+  <meta name="description" content="Your travel vouchers — unlock exclusive local deals.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0B0F14">
+</head>
+
+<body>
+
+  <div id="app">
+
+    <!-- SCREEN 1: ACTIVATION -->
+    <section id="screen-activation" class="screen screen--active">
+      <div class="activation">
+        <div class="activation-logo">
+          <img src="logo.jpeg" alt="GoBeyond"
+            style="width: 80px; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        </div>
+        <h1 class="activation-title">Voucher Wallet</h1>
+        <p class="activation-sub">Enter your booking reference to unlock exclusive deals at your destination.</p>
+        <form id="activation-form" class="activation-form">
+          <input type="text" id="booking-input" class="activation-input" placeholder="e.g. BKK-2026-ABCD"
+            autocomplete="off" spellcheck="false">
+          <button type="submit" class="btn btn-primary btn-lg activation-btn" id="unlock-btn">
+            Unlock My Trip
+            <svg class="btn-arrow" viewBox="0 0 20 20" fill="none">
+              <path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </button>
+        </form>
+        <p class="activation-note">No account needed. Just your booking code.</p>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: VOUCHER LIST -->
+    <section id="screen-list" class="screen">
+      <header class="list-header">
+        <div class="list-header-info">
+          <h2 class="list-destination" id="list-destination">Bangkok</h2>
+          <p class="list-subtitle">Your curated deals</p>
+        </div>
+        <img src="logo.jpeg" alt="GoBeyond" class="list-header-logo"
+          style="width: 32px; height: 32px; border-radius: 6px;">
+      </header>
+      <div class="filter-bar" id="filter-bar">
+        <button class="filter-chip filter-chip--active" data-filter="all">All</button>
+        <button class="filter-chip" data-filter="food">Food &amp; Drink</button>
+        <button class="filter-chip" data-filter="activities">Activities</button>
+        <button class="filter-chip" data-filter="nightlife">Nightlife</button>
+        <button class="filter-chip" data-filter="wellness">Wellness</button>
+      </div>
+      <div class="voucher-list" id="voucher-list">
+        <!-- Cards rendered by JS -->
+      </div>
+    </section>
+
+    <!-- SCREEN 3: VOUCHER DETAIL -->
+    <section id="screen-detail" class="screen">
+      <header class="detail-header">
+        <button class="back-btn" id="detail-back">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+          Back
+        </button>
+      </header>
+      <div class="detail-content" id="detail-content">
+        <span class="detail-category" id="detail-category">Food &amp; Drink</span>
+        <h2 class="detail-venue" id="detail-venue">Venue Name</h2>
+        <div class="detail-discount" id="detail-discount">20% off</div>
+        <p class="detail-description" id="detail-description">Full description here.</p>
+
+        <div class="detail-terms">
+          <button class="detail-terms-toggle" id="terms-toggle">
+            Terms &amp; Conditions
+            <svg class="detail-terms-arrow" viewBox="0 0 20 20" fill="none">
+              <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </button>
+          <div class="detail-terms-body" id="terms-body">
+            <p id="detail-terms-text">Terms text here.</p>
+          </div>
+        </div>
+
+        <div class="detail-meta">
+          <div class="detail-meta-item">
+            <svg viewBox="0 0 20 20" fill="none">
+              <path d="M10 2a6 6 0 016 6c0 4.5-6 10-6 10S4 12.5 4 8a6 6 0 016-6z" stroke="currentColor"
+                stroke-width="1.5" />
+              <circle cx="10" cy="8" r="2" stroke="currentColor" stroke-width="1.5" />
+            </svg>
+            <span id="detail-location">Area</span>
+          </div>
+          <div class="detail-meta-item">
+            <svg viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5" />
+              <path d="M10 6v4l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            <span id="detail-expiry">Valid until</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg detail-use-btn" id="use-voucher-btn">
+          Use This Voucher
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 4: REDEMPTION -->
+    <section id="screen-redemption" class="screen">
+      <div class="redemption">
+        <div class="redemption-card" id="redemption-card">
+          <div class="redemption-icon">
+            <svg viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2.5" />
+              <path d="M20 32l8 8 16-16" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </div>
+          <h2 class="redemption-title">Voucher Active</h2>
+          <p class="redemption-venue" id="redemption-venue">Venue Name</p>
+          <div class="redemption-discount" id="redemption-discount">20% off</div>
+          <p class="redemption-instruction">Show this screen to staff</p>
+        </div>
+        <button class="btn btn-secondary btn-lg redemption-done-btn" id="done-btn">
+          Done
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>

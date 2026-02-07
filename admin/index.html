@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMC Voucher Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.min.css">
+    <style>
+        body {
+            padding: 20px;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .card {
+            background: #f4f5f6;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .delete-btn {
+            background: #ff4d4d;
+            border-color: #ff4d4d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <img src="/logo.jpeg" alt="GoBeyond" style="height: 48px; border-radius: 8px;">
+                <h1 style="margin: 0;">GoBeyond Admin</h1>
+            </div>
+            <button class="button button-outline" onclick="logout()">Logout</button>
+        </div>
+
+        <!-- Role: Admin Only -->
+        <div id="admin-section" style="display:none;">
+            <div class="section">
+                <h2>Partners</h2>
+                <div class="row">
+                    <div class="col">
+                        <h3>Create Partner</h3>
+                        <form id="partner-form">
+                            <fieldset>
+                                <label>Username</label>
+                                <input type="text" id="p-username" required>
+                                <label>Password</label>
+                                <input type="text" id="p-password" required>
+                                <label>PIN Code (4 digits)</label>
+                                <input type="text" id="p-pin" maxlength="4" required>
+                                <button class="button-primary" type="submit">Create Partner</button>
+                            </fieldset>
+                        </form>
+                    </div>
+                    <div class="col">
+                        <h3>Active Partners</h3>
+                        <div id="partner-list">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookings Section (Admin Only) -->
+        <div id="bookings-section" class="section" style="display:none;">
+            <h2>Bookings</h2>
+            <div class="row">
+                <div class="col">
+                    <h3>Add New Booking Code</h3>
+                    <form id="booking-form">
+                        <fieldset>
+                            <label for="booking-code">Booking Code (e.g. BKK-2026-XYZ)</label>
+                            <input type="text" id="booking-code" required>
+                            <button class="button-primary" type="submit">Add Code</button>
+                        </fieldset>
+                    </form>
+                </div>
+                <div class="col">
+                    <h3>Active Codes</h3>
+                    <div id="booking-list">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vouchers Section (All Roles) -->
+        <div class="section">
+            <h2>Vouchers</h2>
+            <div class="row">
+                <div class="col">
+                    <h3>Add New Voucher</h3>
+                    <form id="voucher-form">
+                        <fieldset>
+                            <label>Venue Name</label>
+                            <input type="text" id="v-venue" required>
+
+                            <label>Category (food, nightlife, activities, wellness)</label>
+                            <select id="v-category">
+                                <option value="food">Food & Drink</option>
+                                <option value="nightlife">Nightlife</option>
+                                <option value="activities">Activities</option>
+                                <option value="wellness">Wellness</option>
+                            </select>
+
+                            <label>Discount (e.g. 20% off)</label>
+                            <input type="text" id="v-discount" required>
+
+                            <label>Location</label>
+                            <input type="text" id="v-location" required>
+
+                            <label>Destination</label>
+                            <input type="text" id="v-destination" required>
+
+                            <label>Description (Short)</label>
+                            <textarea id="v-shortDesc" required></textarea>
+
+                            <label>Description (Full)</label>
+                            <textarea id="v-fullDesc" required></textarea>
+
+                            <label>Terms</label>
+                            <textarea id="v-terms" required></textarea>
+
+                            <label>Expiry</label>
+                            <input type="text" id="v-expiry" value="Dec 31, 2026" required>
+
+                            <button class="button-primary" type="submit">Add Voucher</button>
+                        </fieldset>
+                    </form>
+                </div>
+                <div class="col">
+                    <h3>Active Vouchers</h3>
+                    <div id="voucher-list">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

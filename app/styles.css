@@ -1,0 +1,826 @@
+/* ============================
+   RESET & DESIGN TOKENS
+   ============================ */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --color-bg: #FFFFFF;
+  --color-bg-elevated: #F9FAFB;
+  --color-bg-card: #FFFFFF;
+  --color-bg-card-hover: #FFE4E6;
+  --color-surface: #F3F4F6;
+  --color-border: #E5E7EB;
+  --color-border-light: #D1D5DB;
+  --color-text: #111827;
+  --color-text-secondary: #4B5563;
+  --color-text-tertiary: #9CA3AF;
+  --color-accent: #E11D48;
+  /* Red */
+  --color-accent-light: #F43F5E;
+  --color-accent-glow: rgba(225, 29, 72, 0.15);
+  --color-accent-glow-strong: rgba(225, 29, 72, 0.3);
+  --color-teal: #E11D48;
+  /* Unify to red */
+  --color-pink: #E11D48;
+  /* Unify to red */
+  --color-orange: #F97316;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ============================
+   APP SHELL
+   ============================ */
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.screen {
+  display: none;
+  min-height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+}
+
+.screen--active {
+  display: flex;
+  position: relative;
+}
+
+/* ============================
+   BUTTONS
+   ============================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font);
+  font-weight: 550;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-smooth);
+  border-radius: 99px;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 0 0 0 var(--color-accent-glow), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:hover {
+  background: var(--color-accent-light);
+  box-shadow: 0 0 24px var(--color-accent-glow-strong), 0 4px 16px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-light);
+}
+
+.btn-secondary:hover {
+  background: var(--color-bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: 16px;
+  width: 100%;
+}
+
+.btn-arrow {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.25s var(--ease-out);
+}
+
+.btn:hover .btn-arrow {
+  transform: translateX(3px);
+}
+
+/* ============================
+   SCREEN 1: ACTIVATION
+   ============================ */
+.activation {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  min-height: 100vh;
+}
+
+.activation-logo {
+  margin-bottom: 32px;
+}
+
+.activation-logo-icon {
+  width: 56px;
+  height: 56px;
+  color: var(--color-accent);
+}
+
+.activation-title {
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+}
+
+.activation-sub {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  max-width: 320px;
+  margin-bottom: 40px;
+  font-weight: 350;
+}
+
+.activation-form {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activation-input {
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 450;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.activation-input::placeholder {
+  color: var(--color-text-tertiary);
+  font-weight: 350;
+  letter-spacing: 0;
+}
+
+.activation-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+.activation-btn {
+  margin-top: 8px;
+}
+
+.activation-note {
+  margin-top: 24px;
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+
+.activation-error {
+  color: var(--color-pink);
+  font-size: 13px;
+  margin-top: -8px;
+  display: none;
+}
+
+.activation-error.visible {
+  display: block;
+}
+
+/* ============================
+   SCREEN 2: VOUCHER LIST
+   ============================ */
+#screen-list {
+  flex-direction: column;
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 16px;
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 10;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.list-header-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-destination {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.list-subtitle {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.list-header-logo {
+  width: 32px;
+  height: 32px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* Filter Chips */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  padding: 16px 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 99px;
+  border: 1px solid var(--color-border-light);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filter-chip:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--color-text);
+}
+
+.filter-chip--active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.filter-chip--active:hover {
+  background: var(--color-accent-light);
+  border-color: var(--color-accent-light);
+  color: #fff;
+}
+
+/* Voucher Cards */
+.voucher-list {
+  padding: 8px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.voucher-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  cursor: pointer;
+  transition: transform 0.25s var(--ease-out), border-color 0.25s, box-shadow 0.25s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.voucher-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-light);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.voucher-card:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.voucher-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.voucher-card-venue {
+  font-size: 16px;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+  flex: 1;
+  padding-right: 12px;
+}
+
+.voucher-card-discount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-teal);
+  white-space: nowrap;
+  background: rgba(0, 201, 167, 0.1);
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+
+.voucher-card-desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  font-weight: 350;
+  margin-bottom: 12px;
+}
+
+.voucher-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.voucher-card-tag {
+  font-size: 11px;
+  font-weight: 550;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.voucher-card-tag[data-cat="food"] {
+  background: rgba(255, 159, 67, 0.1);
+  color: var(--color-orange);
+}
+
+.voucher-card-tag[data-cat="activities"] {
+  background: rgba(0, 201, 167, 0.1);
+  color: var(--color-teal);
+}
+
+.voucher-card-tag[data-cat="nightlife"] {
+  background: rgba(108, 99, 255, 0.1);
+  color: var(--color-accent-light);
+}
+
+.voucher-card-tag[data-cat="wellness"] {
+  background: rgba(255, 107, 157, 0.1);
+  color: var(--color-pink);
+}
+
+.voucher-card-expiry {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  font-weight: 400;
+}
+
+/* Empty State */
+.voucher-list-empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+}
+
+/* ============================
+   SCREEN 3: VOUCHER DETAIL
+   ============================ */
+#screen-detail {
+  flex-direction: column;
+}
+
+.detail-header {
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 10;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--color-accent-light);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.back-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.detail-content {
+  padding: 24px 20px 40px;
+}
+
+.detail-category {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 550;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 12px;
+  border-radius: 99px;
+  margin-bottom: 16px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.detail-category[data-cat="food"] {
+  background: rgba(255, 159, 67, 0.1);
+  color: var(--color-orange);
+}
+
+.detail-category[data-cat="activities"] {
+  background: rgba(0, 201, 167, 0.1);
+  color: var(--color-teal);
+}
+
+.detail-category[data-cat="nightlife"] {
+  background: rgba(108, 99, 255, 0.1);
+  color: var(--color-accent-light);
+}
+
+.detail-category[data-cat="wellness"] {
+  background: rgba(255, 107, 157, 0.1);
+  color: var(--color-pink);
+}
+
+.detail-venue {
+  font-size: 26px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 20px;
+}
+
+.detail-discount {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-teal);
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+  padding: 16px 24px;
+  background: rgba(0, 201, 167, 0.08);
+  border: 1px solid rgba(0, 201, 167, 0.15);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.detail-description {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  font-weight: 350;
+  margin-bottom: 24px;
+}
+
+/* Collapsible Terms */
+.detail-terms {
+  margin-bottom: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.detail-terms-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--color-bg-card);
+  border: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.detail-terms-arrow {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s var(--ease-smooth);
+}
+
+.detail-terms-toggle.open .detail-terms-arrow {
+  transform: rotate(180deg);
+}
+
+.detail-terms-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s var(--ease-smooth);
+}
+
+.detail-terms-body.open {
+  max-height: 200px;
+}
+
+.detail-terms-body p {
+  padding: 0 16px 14px;
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  line-height: 1.6;
+}
+
+/* Meta Info */
+.detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.detail-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.detail-meta-item svg {
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.detail-use-btn {
+  margin-top: 8px;
+}
+
+/* ============================
+   SCREEN 4: REDEMPTION
+   ============================ */
+.redemption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  min-height: 100vh;
+  text-align: center;
+}
+
+.redemption-card {
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-teal);
+  border-radius: var(--radius-xl);
+  padding: 48px 32px;
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.redemption-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: var(--radius-xl);
+  padding: 2px;
+  background: linear-gradient(135deg, var(--color-teal), var(--color-accent), var(--color-teal));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.redemption-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  color: var(--color-teal);
+}
+
+.redemption-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.redemption-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  color: var(--color-teal);
+}
+
+.redemption-venue {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.redemption-discount {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  margin-bottom: 24px;
+}
+
+.redemption-instruction {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  font-weight: 450;
+  padding: 12px 20px;
+  background: rgba(0, 201, 167, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+.redemption-done-btn {
+  max-width: 360px;
+}
+
+/* Glow animation class applied by JS */
+.redemption-card.glow {
+  box-shadow: 0 0 40px rgba(0, 201, 167, 0.2), 0 0 80px rgba(0, 201, 167, 0.1);
+}
+
+/* ============================
+   SCREEN TRANSITION HELPERS
+   ============================ */
+.screen--entering,
+.screen--leaving {
+  display: flex;
+  position: absolute;
+}
+
+/* ============================
+   RESPONSIVE
+   ============================ */
+@media (max-width: 480px) {
+  #app {
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 481px) {
+  body {
+    display: flex;
+    justify-content: center;
+    background: #060911;
+  }
+
+  #app {
+    border-left: 1px solid var(--color-border);
+    border-right: 1px solid var(--color-border);
+    box-shadow: 0 0 80px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* MODALS */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.modal.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal-content {
+  background: var(--color-bg-card);
+  padding: 32px;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+  transform: translateY(20px);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal.active .modal-content {
+  transform: translateY(0);
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.modal-text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 24px;
+}
+
+.pin-display {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.pin-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-border-light);
+  transition: background 0.2s;
+}
+
+.pin-dot.filled {
+  background: var(--color-accent);
+}
+
+.success-icon {
+  width: 64px;
+  height: 64px;
+  background: #10B981;
+  color: white;
+  border-radius: 50%;
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}

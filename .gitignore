@@ -1,0 +1,4 @@
+node_modules
+.env
+voucher_wallet.db
+.DS_Store
