@@ -1,7 +1,7 @@
 # Project Report & Handover: GoBeyond Voucher Wallet (v0.1)
 
-**Date:** 2026-02-07 23:45
-**Version:** v0.1
+**Date:** 2026-02-08 01:20
+**Version:** v0.11
 **Repository:** https://github.com/Naskaus/Meet_Beyond
 
 ## 1. Executive Summary
@@ -28,6 +28,11 @@ Implemented a secure session-based auth system with 3 distinct roles:
 ### 🎫 Redemption System (Option B)
 - **Flow**: Traveler clicks "Redeem" -> Modal requests PIN -> Staff enters PIN -> Server validates -> Redemption recorded.
 - **Security**: PINs are 4-digit codes assigned to Partners by Admins.
+
+### 🎯 v0.11: Selective Voucher Visibility
+- **Feature**: Admins can now choose **exactly which vouchers** appear for a specific Booking Code.
+- **Admin UI**: "Select All", "Select None", and Category Helpers (e.g., "All Bangkok").
+- **Migration**: Zero-downtime migration ensured existing bookings kept full access.
 
 ## 3. Technical Stack
 

@@ -87,12 +87,29 @@
             <h2>Bookings</h2>
             <div class="row">
                 <div class="col">
-                    <h3>Add New Booking Code</h3>
+                    <h3>Create New Booking Code</h3>
                     <form id="booking-form">
                         <fieldset>
                             <label for="booking-code">Booking Code (e.g. BKK-2026-XYZ)</label>
                             <input type="text" id="booking-code" required>
-                            <button class="button-primary" type="submit">Add Code</button>
+                            
+                            <!-- Voucher Visibility Selector -->
+                            <div style="margin-top: 20px; border: 1px solid var(--color-border); padding: 16px; border-radius: 8px;">
+                                <label>Visible Vouchers</label>
+                                <div style="margin-bottom: 10px;">
+                                    <button type="button" class="button button-small button-outline" onclick="selectAllVouchers(true)">Select All</button>
+                                    <button type="button" class="button button-small button-outline" onclick="selectAllVouchers(false)">Select None</button>
+                                    <button type="button" class="button button-small button-outline" onclick="selectVouchersByCat('Bangkok')">All Bangkok</button>
+                                    <button type="button" class="button button-small button-outline" onclick="selectVouchersByCat('Chiang Mai')">All Chiang Mai</button>
+                                    <button type="button" class="button button-small button-outline" onclick="selectVouchersByCat('Islands')">All Islands</button>
+                                </div>
+                                <div id="voucher-checklist" style="max-height: 200px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                    <!-- Checkboxes injected by JS -->
+                                    Loading vouchers...
+                                </div>
+                            </div>
+
+                            <button class="button-primary" type="submit" style="margin-top: 16px;">Create Code</button>
                         </fieldset>
                     </form>
                 </div>
@@ -101,6 +118,25 @@
                     <div id="booking-list">Loading...</div>
                 </div>
             </div>
+        </div>
+
+        <!-- Edit Booking Modal -->
+        <div id="modal-edit-booking" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center;">
+             <div style="background:white; padding:32px; border-radius:12px; width:500px; max-width:90%;">
+                <h3>Edit Booking Visibility</h3>
+                <input type="hidden" id="edit-booking-id">
+                <div style="margin-bottom: 10px;">
+                    <button type="button" class="button button-small button-outline" onclick="selectEditVouchers(true)">Select All</button>
+                    <button type="button" class="button button-small button-outline" onclick="selectEditVouchers(false)">Select None</button>
+                </div>
+                <div id="edit-voucher-checklist" style="max-height: 300px; overflow-y: auto; display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom:20px;">
+                      <!-- Checkboxes injected -->
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button class="button button-outline" onclick="closeEditModal()">Cancel</button>
+                    <button class="button button-primary" onclick="saveBookingVisibility()">Save Changes</button>
+                </div>
+             </div>
         </div>
 
         <!-- Vouchers Section (All Roles) -->

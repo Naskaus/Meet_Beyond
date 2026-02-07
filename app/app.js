@@ -2,25 +2,35 @@
   'use strict';
 
   // =============================
-  // DEMO DATA
-  // =============================
+  // Init
+  var bookingCode = localStorage.getItem('bookingCode');
   var vouchers = [];
+  var selectedVoucher = null;
 
-  // Fetch vouchers from API
-  fetch('/api/vouchers')
-    .then(response => response.json())
-    .then(data => {
-      vouchers = data.data;
-      renderVoucherList();
-    })
-    .catch(error => console.error('Error fetching vouchers:', error));
+  if (bookingCode) {
+    // Fetch vouchers visible for this booking code
+    fetch('/api/vouchers?booking_code=' + bookingCode)
+      .then(function (response) { return response.json(); })
+      .then(function (data) {
+        vouchers = data.data;
+        renderVoucherList();
 
+        // Use history state to restore view
+        if (window.location.hash === '#detail' && window.currentVoucherId) {
+          openVoucherDetail(window.currentVoucherId);
+        } else {
+          navigateTo('list');
+        }
+      })
+      .catch(function (err) { console.error(err); });
+  } else {
+    navigateTo('activation');
+  }
   // =============================
   // STATE
   // =============================
   var currentScreen = 'activation';
   var currentFilter = 'all';
-  var selectedVoucher = null;
   var listScrollPos = 0;
 
   // =============================

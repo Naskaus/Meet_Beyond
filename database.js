@@ -62,6 +62,37 @@ db.serialize(() => {
     status TEXT DEFAULT 'active'
   )`);
 
+  // Create Booking-Voucher Visibility Table (v0.11)
+  db.run(`CREATE TABLE IF NOT EXISTS booking_vouchers (
+    booking_id INTEGER,
+    voucher_id INTEGER,
+    PRIMARY KEY (booking_id, voucher_id),
+    FOREIGN KEY(booking_id) REFERENCES bookings(id),
+    FOREIGN KEY(voucher_id) REFERENCES vouchers(id)
+  )`);
+
+  // Migration: If booking_vouchers is empty but bookings exist, link ALL vouchers to existing bookings
+  db.get("SELECT count(*) as count FROM booking_vouchers", (err, row) => {
+    if (!err && row.count === 0) {
+      db.all("SELECT id FROM bookings", (err, bookings) => {
+        if (!err && bookings.length > 0) {
+          console.log("Migrating existing bookings to have ALL vouchers...");
+          db.all("SELECT id FROM vouchers", (err, vouchers) => {
+            if (!err) {
+              const stmt = db.prepare("INSERT OR IGNORE INTO booking_vouchers (booking_id, voucher_id) VALUES (?, ?)");
+              bookings.forEach(b => {
+                vouchers.forEach(v => {
+                  stmt.run(b.id, v.id);
+                });
+              });
+              stmt.finalize();
+            }
+          });
+        }
+      });
+    }
+  });
+
   // Seed Data
   const stmt = db.prepare(`INSERT INTO vouchers (venue, category, categoryLabel, discount, shortDesc, fullDesc, terms, location, destination, expiry) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
 

@@ -98,7 +98,7 @@ app.get('/api/users', isAdmin, (req, res) => {
     });
 });
 
-// API: Get all vouchers (Filtered by Partner)
+// API: Get all vouchers (Filtered by Partner OR Booking)
 app.get('/api/vouchers', (req, res) => {
     let sql = "SELECT * FROM vouchers";
     let params = [];
@@ -107,6 +107,17 @@ app.get('/api/vouchers', (req, res) => {
     if (req.session && req.session.role === 'partner') {
         sql += " WHERE partner_id = ?";
         params.push(req.session.userId);
+    }
+    // If booking_code provided (Traveler View), filter by visibility
+    else if (req.query.booking_code) {
+        sql = `
+            SELECT v.* 
+            FROM vouchers v
+            JOIN booking_vouchers bv ON v.id = bv.voucher_id
+            JOIN bookings b ON bv.booking_id = b.id
+            WHERE b.code = ?
+        `;
+        params.push(req.query.booking_code);
     }
 
     db.all(sql, params, (err, rows) => {
@@ -153,8 +164,9 @@ app.delete('/api/vouchers/:id', (req, res) => {
     });
 });
 
+
 // API: Get all bookings
-app.get('/api/bookings', (req, res) => {
+app.get('/api/bookings', isAdmin, (req, res) => {
     const sql = "SELECT * FROM bookings";
     db.all(sql, [], (err, rows) => {
         if (err) {
@@ -168,31 +180,71 @@ app.get('/api/bookings', (req, res) => {
     });
 });
 
-// API: Add a booking
-app.post('/api/bookings', (req, res) => {
-    const { code } = req.body;
-    const sql = "INSERT INTO bookings (code) VALUES (?)";
-    db.run(sql, [code], function (err) {
-        if (err) {
-            res.status(400).json({ "error": err.message });
-            return;
+// API: Create Booking with Vouchers
+app.post('/api/bookings', isAdmin, (req, res) => {
+    const { code, voucher_ids } = req.body;
+
+    // 1. Create Booking
+    db.run('INSERT INTO bookings (code) VALUES (?)', [code], function (err) {
+        if (err) return res.status(400).json({ error: err.message });
+
+        const bookingId = this.lastID;
+
+        // 2. Link Vouchers (if provided)
+        if (voucher_ids && voucher_ids.length > 0) {
+            const stmt = db.prepare('INSERT INTO booking_vouchers (booking_id, voucher_id) VALUES (?, ?)');
+            voucher_ids.forEach(vid => stmt.run(bookingId, vid));
+            stmt.finalize();
+        } else {
+            // Default: Link ALL vouchers if none specified (optional, but safer to be explicit)
+            db.all('SELECT id FROM vouchers', (err, vouchers) => {
+                if (!err) {
+                    const stmt = db.prepare('INSERT INTO booking_vouchers (booking_id, voucher_id) VALUES (?, ?)');
+                    vouchers.forEach(v => stmt.run(bookingId, v.id));
+                    stmt.finalize();
+                }
+            });
         }
-        res.json({
-            "message": "success",
-            "data": { id: this.lastID, code }
-        });
+
+        res.json({ message: 'Booking created', id: bookingId });
     });
 });
 
-// API: Delete a booking
-app.delete('/api/bookings/:id', (req, res) => {
-    const sql = "DELETE FROM bookings WHERE id = ?";
-    db.run(sql, req.params.id, function (err) {
-        if (err) {
-            res.status(400).json({ "error": err.message });
-            return;
+// API: Delete Booking
+app.delete('/api/bookings/:id', isAdmin, (req, res) => {
+    // Cascade delete manually (SQLite foreign keys might not be enabled by default)
+    db.run('DELETE FROM booking_vouchers WHERE booking_id = ?', [req.params.id], (err) => {
+        if (!err) {
+            db.run('DELETE FROM bookings WHERE id = ?', [req.params.id], function (err) {
+                if (err) return res.status(400).json({ error: err.message });
+                res.json({ message: 'deleted', changes: this.changes });
+            });
         }
-        res.json({ "message": "deleted", changes: this.changes });
+    });
+});
+
+// API: Get Vouchers for specific Booking (Admin View)
+app.get('/api/bookings/:id/vouchers', isAdmin, (req, res) => {
+    db.all('SELECT voucher_id FROM booking_vouchers WHERE booking_id = ?', [req.params.id], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ data: rows.map(r => r.voucher_id) });
+    });
+});
+
+// API: Update Vouchers for Booking
+app.put('/api/bookings/:id/vouchers', isAdmin, (req, res) => {
+    const { voucher_ids } = req.body;
+    const bookingId = req.params.id;
+
+    // Transaction-like: Delete old -> Insert new
+    db.run('DELETE FROM booking_vouchers WHERE booking_id = ?', [bookingId], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        const stmt = db.prepare('INSERT INTO booking_vouchers (booking_id, voucher_id) VALUES (?, ?)');
+        voucher_ids.forEach(vid => stmt.run(bookingId, vid));
+        stmt.finalize();
+
+        res.json({ message: 'Vouchers updated' });
     });
 });
 

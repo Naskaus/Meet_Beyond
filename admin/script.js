@@ -4,8 +4,11 @@ const voucherForm = document.getElementById('voucher-form');
 const vouchersList = document.getElementById('voucher-list');
 const partnerForm = document.getElementById('partner-form');
 const partnerList = document.getElementById('partner-list');
+const voucherChecklist = document.getElementById('voucher-checklist');
+const editVoucherChecklist = document.getElementById('edit-voucher-checklist');
 
 let currentUserRole = '';
+let allVouchers = [];
 
 // --- Auth Check ---
 async function checkAuth() {
@@ -27,6 +30,7 @@ async function checkAuth() {
             document.getElementById('bookings-section').style.display = 'block';
             loadPartners();
             loadBookings();
+            loadVouchersForChecklist(); // For Admin
         } else {
             currentUserRole = 'partner';
         }
@@ -43,6 +47,39 @@ async function logout() {
 }
 
 // --- Loaders ---
+function loadVouchersForChecklist() {
+    fetch('/api/vouchers')
+        .then(res => res.json())
+        .then(data => {
+            allVouchers = data.data;
+            renderChecklist(voucherChecklist, allVouchers, true); // true = all checked by default
+        });
+}
+
+function renderChecklist(container, vouchers, checked = false) {
+    container.innerHTML = vouchers.map(v => `
+        <label style="font-weight:normal; font-size:14px; display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" value="${v.id}" ${checked ? 'checked' : ''} data-cat="${v.destination}">
+            ${v.venue} <span style="color:#666; font-size:12px;">(${v.destination})</span>
+        </label>
+    `).join('');
+}
+
+// Helpers
+window.selectAllVouchers = (select) => {
+    voucherChecklist.querySelectorAll('input').forEach(cb => cb.checked = select);
+}
+window.selectVouchersByCat = (cat) => {
+    voucherChecklist.querySelectorAll('input').forEach(cb => {
+        cb.checked = cb.dataset.cat === cat;
+    });
+}
+// Edit Helpers
+window.selectEditVouchers = (select) => {
+    editVoucherChecklist.querySelectorAll('input').forEach(cb => cb.checked = select);
+}
+
+
 function loadPartners() {
     fetch('/api/users')
         .then(res => res.json())
@@ -62,9 +99,10 @@ function loadBookings() {
         .then(data => {
             bookingsList.innerHTML = data.data.map(b => `
                 <div class="card">
-                    <strong>${b.code}</strong> <br>
-                    <small>ID: ${b.id}</small> 
-                    <button class="button button-small delete-btn" onclick="deleteBooking(${b.id})" style="float:right; margin-top:-20px;">X</button>
+                    <strong>${b.code}</strong> 
+                    <button class="button button-small delete-btn" onclick="deleteBooking(${b.id})" style="float:right; margin-left:10px;">X</button>
+                    <button class="button button-small button-outline" onclick="openEditBooking(${b.id})" style="float:right;">Edit</button>
+                    <br><small>ID: ${b.id}</small> 
                 </div>
             `).join('');
         });
@@ -84,6 +122,46 @@ function loadVouchers() {
             `).join('');
         });
 }
+
+// --- Edit Modal Logic ---
+window.openEditBooking = async (id) => {
+    document.getElementById('edit-booking-id').value = id;
+    document.getElementById('modal-edit-booking').style.display = 'flex';
+
+    // 1. Render all vouchers checklist (unchecked)
+    renderChecklist(editVoucherChecklist, allVouchers, false);
+
+    // 2. Fetch enabled vouchers for this booking
+    const res = await fetch(`/api/bookings/${id}/vouchers`);
+    const data = await res.json();
+    const enabledIds = data.data; // Array of IDs
+
+    // 3. Mark checked
+    editVoucherChecklist.querySelectorAll('input').forEach(cb => {
+        if (enabledIds.includes(parseInt(cb.value))) {
+            cb.checked = true;
+        }
+    });
+}
+
+window.closeEditModal = () => {
+    document.getElementById('modal-edit-booking').style.display = 'none';
+}
+
+window.saveBookingVisibility = async () => {
+    const id = document.getElementById('edit-booking-id').value;
+    const selected = Array.from(editVoucherChecklist.querySelectorAll('input:checked')).map(cb => cb.value);
+
+    await fetch(`/api/bookings/${id}/vouchers`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voucher_ids: selected })
+    });
+
+    closeEditModal();
+    alert('Visibility updated!');
+}
+
 
 // --- Actions ---
 if (partnerForm) {
@@ -107,13 +185,18 @@ if (partnerForm) {
 bookingForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const code = document.getElementById('booking-code').value;
+    // Get Selected Vouchers
+    const selectedVouchers = Array.from(voucherChecklist.querySelectorAll('input:checked')).map(cb => cb.value);
+
     fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({ code, voucher_ids: selectedVouchers })
     }).then(() => {
         bookingForm.reset();
         loadBookings();
+        // Reset checklist to all checked
+        selectAllVouchers(true);
     });
 });
 
