@@ -1,69 +1,64 @@
-# Project Report & Handover: GoBeyond Voucher Wallet (v0.1)
+# Project Report & Handover: GoBeyond Voucher Wallet (v0.2)
 
-**Date:** 2026-02-08 01:20
-**Version:** v0.11
+**Date:** 2026-02-08 22:00  
+**Version:** v0.2  
 **Repository:** https://github.com/Naskaus/Meet_Beyond
 
 ## 1. Executive Summary
-In this session, we successfully transformed a static HTML prototype into a fully dynamic, database-driven web application ("GoBeyond Voucher Wallet"). We rebranded the entire interface to match the "GoBeyond" identity (Red & White theme) and implemented a robust 3-role authentication system with a secure PIN-based redemption flow.
+v0.2 focuses on critical security fixes and UI improvements. The most important fix prevents vouchers from being redeemed multiple times per booking. We also added image upload support, voucher edit functionality, and professional card styling for the traveler app.
 
-## 2. Key Achievements
+## 2. Key Achievements (v0.2)
 
-### 🏗️ Architecture Migration
-- **Backend**: Migrated to **Node.js** with **Express.js**.
-- **Database**: Implemented **SQLite** (`voucher_wallet.db`) for zero-config persistence.
-- **Frontend**: Served statically by Express, with API calls for data fetching.
+### 🔒 Security Fix: Multiple Redemption Prevention
+- **Server-side check**: `/api/redeem` now queries `redemptions` table before inserting
+- **Master PIN**: Added `0000` as universal PIN alongside partner-specific PINs
+- **Frontend refresh**: Voucher list refreshes after redemption to show "USED" badge
 
-### 🎨 Rebranding (GoBeyond)
-- **Theme**: Switched from Dark Mode to a clean **Red & White** Light Mode.
-- **Logo**: Integrated `logo.jpeg` across Landing Page, App, and Admin Dashboard.
-- **UI**: Updated `styles.css` and `app/styles.css` with new design tokens.
+### 📷 Image Upload Support
+- **Multer integration**: Configured for voucher image/logo uploads
+- **Static serving**: `/uploads` route serves uploaded images
+- **Admin UI**: FormData-based upload with image preview in voucher list
 
-### 🔐 Authentication & Roles
-Implemented a secure session-based auth system with 3 distinct roles:
-1.  **Admin** (`role: 'admin'`): Full access. Can create Partners and Bookings.
-2.  **Partner** (`role: 'partner'`): Limited access. Can only create/manage *their own* vouchers.
-3.  **Traveler**: No account required. Authenticates via **Booking Code** (`BKK-2026-ABCD`).
+### ✏️ Voucher CRUD Operations
+- **Edit modal**: Full-featured edit form in admin panel
+- **PUT endpoint**: `/api/vouchers/:id` with dynamic field updates
+- **Cascade delete**: Vouchers, bookings now properly delete related records
 
-### 🎫 Redemption System (Option B)
-- **Flow**: Traveler clicks "Redeem" -> Modal requests PIN -> Staff enters PIN -> Server validates -> Redemption recorded.
-- **Security**: PINs are 4-digit codes assigned to Partners by Admins.
+### 🎨 Professional Traveler UI
+- **Card redesign**: Images as backgrounds with gradient overlay
+- **Smaller logos**: 48px logos positioned in top-left corner
+- **Premium styling**: White text with shadows, accent-colored discount badges
 
-### 🎯 v0.11: Selective Voucher Visibility
-- **Feature**: Admins can now choose **exactly which vouchers** appear for a specific Booking Code.
-- **Admin UI**: "Select All", "Select None", and Category Helpers (e.g., "All Bangkok").
-- **Migration**: Zero-downtime migration ensured existing bookings kept full access.
+### 🔄 Traveler Auto-Logout
+- **Session clearing**: `localStorage.removeItem('bookingCode')` on app load
+- **Security**: Travelers must ALWAYS enter booking code to access vouchers
 
 ## 3. Technical Stack
 
 - **Server**: Node.js, Express.js
 - **Database**: SQLite3
-- **Auth**: `bcryptjs` (Password Hashing), `cookie-session` (Session Management)
-- **Frontend**: Vanilla JS, HTML5, CSS3, `anime.js` (Animations), Milligram (Admin UI)
+- **Auth**: `bcryptjs` (Password Hashing), `cookie-session`
+- **Uploads**: `multer` (Image handling)
+- **Frontend**: Vanilla JS, HTML5, CSS3, `anime.js`, Milligram
 
 ## 4. Database Schema
 
 ### `users`
-- `id`: INTEGER PK
-- `username`: TEXT UNIQUE
-- `password_hash`: TEXT (Bcrypt)
-- `role`: TEXT ('admin', 'partner')
-- `pin_code`: TEXT (4-digit, for Partners)
+- `id`, `username`, `password_hash`, `role`, `pin_code`
 
 ### `vouchers`
-- `id`: INTEGER PK
-- `partner_id`: INTEGER FK (Ref `users`)
-- `venue`, `category`, `discount`, `terms`, etc.
+- `id`, `partner_id`, `venue`, `category`, `discount`, `terms`
+- `image_url`, `logo_url` (NEW: image paths)
 
 ### `bookings`
-- `id`: INTEGER PK
-- `code`: TEXT UNIQUE (e.g., 'BKK-2026-ABCD')
+- `id`, `code`
+
+### `booking_vouchers`
+- `id`, `booking_id`, `voucher_id`
 
 ### `redemptions`
-- `id`: INTEGER PK
-- `booking_id`: INTEGER FK
-- `voucher_id`: INTEGER FK
-- `redeemed_at`: TIMESTAMP
+- `id`, `booking_id`, `voucher_id`, `redeemed_at`
+- `UNIQUE(booking_id, voucher_id)` constraint
 
 ## 5. API Endpoints
 
@@ -73,30 +68,34 @@ Implemented a secure session-based auth system with 3 distinct roles:
 | `POST` | `/api/logout` | Auth | Destroy session |
 | `GET` | `/api/users` | Admin | List Partners |
 | `POST` | `/api/users` | Admin | Create Partner |
-| `GET` | `/api/vouchers` | Public/Partner | List Vouchers (Filtered for Partners) |
-| `POST` | `/api/vouchers` | Partner | Create Voucher |
-| `DELETE` | `/api/vouchers/:id` | Partner | Delete Vouchers |
+| `GET` | `/api/vouchers` | Public | List Vouchers |
+| `POST` | `/api/vouchers` | Partner | Create Voucher (with images) |
+| `PUT` | `/api/vouchers/:id` | Partner | Update Voucher (NEW) |
+| `DELETE` | `/api/vouchers/:id` | Partner | Delete Voucher (cascade) |
 | `GET` | `/api/bookings` | Admin | List Booking Codes |
+| `DELETE` | `/api/bookings/:id` | Admin | Delete Booking (cascade) |
 | `POST` | `/api/validate` | Public | Validate Booking Code |
 | `POST` | `/api/redeem` | Public | Validate PIN & Record Redemption |
 
 ## 6. How to Run
 
-1.  **Install Dependencies**:
-    ```bash
-    npm install
-    ```
-2.  **Start Server**:
-    ```bash
-    node server.js
-    ```
-3.  **Access**:
-    - **Landing**: `http://localhost:3000`
-    - **App**: `http://localhost:3000/app` (Code: `BKK-2026-ABCD`)
-    - **Admin**: `http://localhost:3000/admin` (User: `admin`, Pass: `admin123`)
+```bash
+npm install
+node server.js
+```
 
-## 7. Next Steps for v0.2
-- **Analytics Dashboard**: Visualize redemption data in the Admin panel.
-- **Partner Dashboard**: Allow partners to see their own redemption stats.
-- **Password Reset**: Implement email-based reset.
-- **PWA Enhancements**: Offline support and Manifest refinement.
+**Access:**
+- **Landing**: `http://localhost:3000`
+- **App**: `http://localhost:3000/app` (Code: `BKK-2026-ABCD`)
+- **Admin**: `http://localhost:3000/admin` (User: `admin`, Pass: `admin123`)
+
+## 7. Known Issues / Next Steps
+
+### To Fix
+- Delete voucher/booking: Investigate if working correctly in production
+
+### Future Enhancements
+- **Analytics Dashboard**: Visualize redemption data
+- **Partner Dashboard**: Partner-specific redemption stats
+- **Rate limiting**: PIN attempt throttling
+- **Audit logging**: Track all redemptions with user info

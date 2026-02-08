@@ -1,10 +1,26 @@
 const express = require('express');
+
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION:', err);
+});
+process.on('unhandledRejection', (reason, p) => {
+    console.error('UNHANDLED REJECTION:', reason);
+});
+
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const db = require('./database');
 const path = require('path');
+const multer = require('multer');
+
+// Multer config for image uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'public/uploads/'),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+});
+const upload = multer({ storage: storage });
 
 const app = express();
 const PORT = 3000;
@@ -49,6 +65,9 @@ app.use('/admin', express.static('admin'));
 
 // Serve login from 'login' folder at /login route
 app.use('/login', express.static('login'));
+
+// Serve uploaded images
+app.use('/uploads', express.static('public/uploads'));
 
 // Serve landing page (static files in root) from root
 app.use('/', express.static('.'));
@@ -99,25 +118,49 @@ app.get('/api/users', isAdmin, (req, res) => {
 });
 
 // API: Get all vouchers (Filtered by Partner OR Booking)
+// API: Get vouchers (with visibility check & redemption status)
 app.get('/api/vouchers', (req, res) => {
+    // Security Check: Require Session OR Booking Code
+    const isPartner = req.session && req.session.role === 'partner';
+    const isAdmin = req.session && req.session.role === 'admin';
+    const hasBookingCode = req.query.booking_code;
+
+    if (!isPartner && !isAdmin && !hasBookingCode) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Traveler View: If booking_code provided, check visibility AND redemption status
+    if (hasBookingCode) {
+        db.get('SELECT id FROM bookings WHERE code = ?', [req.query.booking_code], (err, booking) => {
+            if (err || !booking) return res.status(401).json({ error: 'Invalid booking code' });
+
+            const bookingId = booking.id;
+
+            // Get vouchers linked to this booking, including redemption status
+            const sql = `
+                SELECT v.*, 
+                       CASE WHEN r.id IS NOT NULL THEN 1 ELSE 0 END as is_redeemed
+                FROM vouchers v
+                JOIN booking_vouchers bv ON v.id = bv.voucher_id
+                LEFT JOIN redemptions r ON v.id = r.voucher_id AND r.booking_id = ?
+                WHERE bv.booking_id = ?
+            `;
+
+            db.all(sql, [bookingId, bookingId], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ "message": "success", "data": rows });
+            });
+        });
+        return;
+    }
+
+    // Admin/Partner View
     let sql = "SELECT * FROM vouchers";
     let params = [];
 
-    // If partner, only show their own vouchers
-    if (req.session && req.session.role === 'partner') {
+    if (isPartner) {
         sql += " WHERE partner_id = ?";
         params.push(req.session.userId);
-    }
-    // If booking_code provided (Traveler View), filter by visibility
-    else if (req.query.booking_code) {
-        sql = `
-            SELECT v.* 
-            FROM vouchers v
-            JOIN booking_vouchers bv ON v.id = bv.voucher_id
-            JOIN bookings b ON bv.booking_id = b.id
-            WHERE b.code = ?
-        `;
-        params.push(req.query.booking_code);
     }
 
     db.all(sql, params, (err, rows) => {
@@ -132,13 +175,16 @@ app.get('/api/vouchers', (req, res) => {
     });
 });
 
-// API: Add a voucher
-app.post('/api/vouchers', isPartner, (req, res) => {
+// API: Add a voucher (with images)
+app.post('/api/vouchers', isPartner, upload.fields([{ name: 'image', maxCount: 1 }, { name: 'logo', maxCount: 1 }]), (req, res) => {
     const { venue, category, categoryLabel, discount, shortDesc, fullDesc, terms, location, destination, expiry } = req.body;
     const partner_id = req.session.role === 'partner' ? req.session.userId : null;
 
-    const sql = `INSERT INTO vouchers (partner_id, venue, category, categoryLabel, discount, shortDesc, fullDesc, terms, location, destination, expiry) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const params = [partner_id, venue, category, categoryLabel, discount, shortDesc, fullDesc, terms, location, destination, expiry];
+    const image_url = req.files['image'] ? '/uploads/' + req.files['image'][0].filename : null;
+    const logo_url = req.files['logo'] ? '/uploads/' + req.files['logo'][0].filename : null;
+
+    const sql = `INSERT INTO vouchers (partner_id, venue, category, categoryLabel, discount, shortDesc, fullDesc, terms, location, destination, expiry, image_url, logo_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const params = [partner_id, venue, category, categoryLabel, discount, shortDesc, fullDesc, terms, location, destination, expiry, image_url, logo_url];
 
     db.run(sql, params, function (err) {
         if (err) {
@@ -152,15 +198,64 @@ app.post('/api/vouchers', isPartner, (req, res) => {
     });
 });
 
-// API: Delete a voucher
-app.delete('/api/vouchers/:id', (req, res) => {
-    const sql = "DELETE FROM vouchers WHERE id = ?";
-    db.run(sql, req.params.id, function (err) {
-        if (err) {
-            res.status(400).json({ "error": err.message });
-            return;
-        }
-        res.json({ "message": "deleted", changes: this.changes });
+// API: Delete a voucher (also clean up booking_vouchers)
+app.delete('/api/vouchers/:id', isPartner, (req, res) => {
+    const voucherId = req.params.id;
+    // First delete from booking_vouchers
+    db.run('DELETE FROM booking_vouchers WHERE voucher_id = ?', [voucherId], (err) => {
+        if (err) return res.status(400).json({ error: err.message });
+        // Then delete from redemptions
+        db.run('DELETE FROM redemptions WHERE voucher_id = ?', [voucherId], (err) => {
+            if (err) return res.status(400).json({ error: err.message });
+            // Finally delete the voucher
+            db.run('DELETE FROM vouchers WHERE id = ?', [voucherId], function (err) {
+                if (err) return res.status(400).json({ error: err.message });
+                res.json({ message: 'deleted', changes: this.changes });
+            });
+        });
+    });
+});
+
+// API: Update a voucher
+app.put('/api/vouchers/:id', isPartner, upload.fields([{ name: 'image', maxCount: 1 }, { name: 'logo', maxCount: 1 }]), (req, res) => {
+    const { venue, category, categoryLabel, discount, shortDesc, fullDesc, terms, location, destination, expiry } = req.body;
+    const voucherId = req.params.id;
+
+    // Build dynamic update
+    let updates = [];
+    let params = [];
+
+    if (venue) { updates.push('venue = ?'); params.push(venue); }
+    if (category) { updates.push('category = ?'); params.push(category); }
+    if (categoryLabel) { updates.push('categoryLabel = ?'); params.push(categoryLabel); }
+    if (discount) { updates.push('discount = ?'); params.push(discount); }
+    if (shortDesc) { updates.push('shortDesc = ?'); params.push(shortDesc); }
+    if (fullDesc) { updates.push('fullDesc = ?'); params.push(fullDesc); }
+    if (terms) { updates.push('terms = ?'); params.push(terms); }
+    if (location) { updates.push('location = ?'); params.push(location); }
+    if (destination) { updates.push('destination = ?'); params.push(destination); }
+    if (expiry) { updates.push('expiry = ?'); params.push(expiry); }
+
+    // Handle images
+    if (req.files && req.files['image']) {
+        updates.push('image_url = ?');
+        params.push('/uploads/' + req.files['image'][0].filename);
+    }
+    if (req.files && req.files['logo']) {
+        updates.push('logo_url = ?');
+        params.push('/uploads/' + req.files['logo'][0].filename);
+    }
+
+    if (updates.length === 0) {
+        return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    params.push(voucherId);
+    const sql = `UPDATE vouchers SET ${updates.join(', ')} WHERE id = ?`;
+
+    db.run(sql, params, function (err) {
+        if (err) return res.status(400).json({ error: err.message });
+        res.json({ message: 'updated', changes: this.changes });
     });
 });
 
@@ -210,16 +305,21 @@ app.post('/api/bookings', isAdmin, (req, res) => {
     });
 });
 
-// API: Delete Booking
+// API: Delete Booking (cascade delete booking_vouchers and redemptions)
 app.delete('/api/bookings/:id', isAdmin, (req, res) => {
-    // Cascade delete manually (SQLite foreign keys might not be enabled by default)
-    db.run('DELETE FROM booking_vouchers WHERE booking_id = ?', [req.params.id], (err) => {
-        if (!err) {
-            db.run('DELETE FROM bookings WHERE id = ?', [req.params.id], function (err) {
+    const bookingId = req.params.id;
+    // First delete from redemptions
+    db.run('DELETE FROM redemptions WHERE booking_id = ?', [bookingId], (err) => {
+        if (err) return res.status(400).json({ error: err.message });
+        // Then delete from booking_vouchers
+        db.run('DELETE FROM booking_vouchers WHERE booking_id = ?', [bookingId], (err) => {
+            if (err) return res.status(400).json({ error: err.message });
+            // Finally delete the booking
+            db.run('DELETE FROM bookings WHERE id = ?', [bookingId], function (err) {
                 if (err) return res.status(400).json({ error: err.message });
                 res.json({ message: 'deleted', changes: this.changes });
             });
-        }
+        });
     });
 });
 
@@ -265,7 +365,9 @@ app.post('/api/validate', (req, res) => {
     });
 });
 
-// API: Redeem Voucher (Option B: Staff PIN)
+// API: Redeem Voucher (Option B: Staff PIN or Master PIN)
+const MASTER_PIN = '0000';
+
 app.post('/api/redeem', (req, res) => {
     const { voucher_id, booking_code, pin } = req.body;
 
@@ -277,22 +379,32 @@ app.post('/api/redeem', (req, res) => {
         db.get(`
             SELECT v.id, u.pin_code 
             FROM vouchers v 
-            JOIN users u ON v.partner_id = u.id 
+            LEFT JOIN users u ON v.partner_id = u.id 
             WHERE v.id = ?`,
             [voucher_id], (err, voucher) => {
 
                 if (err || !voucher) return res.status(400).json({ error: 'Voucher not found or invalid' });
 
-                // 3. Verify PIN
-                if (voucher.pin_code !== pin) {
+                // 3. Verify PIN (Master PIN 0000 OR Partner PIN)
+                if (pin !== MASTER_PIN && voucher.pin_code !== pin) {
                     return res.status(401).json({ error: 'Invalid Staff PIN' });
                 }
 
-                // 4. Record Redemption
-                db.run('INSERT INTO redemptions (booking_id, voucher_id) VALUES (?, ?)',
-                    [booking.id, voucher_id], (err) => {
+                // 4. Check if already redeemed for this booking
+                db.get('SELECT id FROM redemptions WHERE booking_id = ? AND voucher_id = ?',
+                    [booking.id, voucher_id], (err, existing) => {
                         if (err) return res.status(500).json({ error: err.message });
-                        res.json({ success: true, message: 'Redemption successful!' });
+
+                        if (existing) {
+                            return res.status(400).json({ error: 'Voucher already redeemed for this booking' });
+                        }
+
+                        // 5. Record Redemption
+                        db.run('INSERT INTO redemptions (booking_id, voucher_id) VALUES (?, ?)',
+                            [booking.id, voucher_id], (err) => {
+                                if (err) return res.status(500).json({ error: err.message });
+                                res.json({ success: true, message: 'Redemption successful!' });
+                            });
                     });
             });
     });

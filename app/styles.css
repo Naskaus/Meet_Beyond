@@ -333,103 +333,190 @@ body {
   padding: 8px 20px 32px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .voucher-card {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 0;
   cursor: pointer;
   transition: transform 0.25s var(--ease-out), border-color 0.25s, box-shadow 0.25s;
   -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+  position: relative;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .voucher-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--color-border-light);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+  border-color: var(--color-accent);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
 
 .voucher-card:active {
   transform: translateY(0) scale(0.98);
 }
 
+/* Gradient overlay for readability */
+.voucher-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.1) 0%,
+    rgba(0,0,0,0.4) 50%,
+    rgba(0,0,0,0.75) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Cards without image */
+.voucher-card:not([style*="background-image"])::before {
+  background: none;
+}
+
+.voucher-card:not([style*="background-image"]) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Logo overlay - small, positioned in top-left corner */
+.voucher-logo-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  background: rgba(255,255,255,0.95);
+  border-radius: 8px;
+  padding: 4px;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Redeemed badge */
+.redeemed-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255,255,255,0.95);
+  color: #E11D48;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 12px;
+  border-radius: 99px;
+  z-index: 3;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Redeemed card style */
+.voucher-card--redeemed {
+  opacity: 0.7;
+  filter: grayscale(40%);
+}
+
+/* Card content - positioned at bottom */
 .voucher-card-top {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  padding: 16px;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 10px;
 }
 
 .voucher-card-venue {
-  font-size: 16px;
-  font-weight: 620;
+  font-size: 18px;
+  font-weight: 700;
   letter-spacing: -0.01em;
   flex: 1;
   padding-right: 12px;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  line-height: 1.3;
 }
 
 .voucher-card-discount {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-teal);
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
   white-space: nowrap;
-  background: rgba(0, 201, 167, 0.1);
-  padding: 4px 10px;
+  background: var(--color-accent);
+  padding: 6px 14px;
   border-radius: 99px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .voucher-card-desc {
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  line-height: 1.5;
-  font-weight: 350;
-  margin-bottom: 12px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.9);
+  line-height: 1.4;
+  font-weight: 400;
+  padding: 0 16px;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  display: none; /* Hide for cleaner look */
 }
 
 .voucher-card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 16px 16px;
+  position: relative;
+  z-index: 2;
 }
 
 .voucher-card-tag {
-  font-size: 11px;
-  font-weight: 550;
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 4px 10px;
+  letter-spacing: 0.08em;
+  padding: 5px 12px;
   border-radius: 99px;
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
+  background: rgba(255,255,255,0.95);
+  color: var(--color-accent);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
 .voucher-card-tag[data-cat="food"] {
-  background: rgba(255, 159, 67, 0.1);
+  background: rgba(255,255,255,0.95);
   color: var(--color-orange);
 }
 
 .voucher-card-tag[data-cat="activities"] {
-  background: rgba(0, 201, 167, 0.1);
-  color: var(--color-teal);
+  background: rgba(255,255,255,0.95);
+  color: #059669;
 }
 
 .voucher-card-tag[data-cat="nightlife"] {
-  background: rgba(108, 99, 255, 0.1);
-  color: var(--color-accent-light);
+  background: rgba(255,255,255,0.95);
+  color: #7C3AED;
 }
 
 .voucher-card-tag[data-cat="wellness"] {
-  background: rgba(255, 107, 157, 0.1);
+  background: rgba(255,255,255,0.95);
   color: var(--color-pink);
 }
 
 .voucher-card-expiry {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-  font-weight: 400;
+  font-size: 11px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 /* Empty State */

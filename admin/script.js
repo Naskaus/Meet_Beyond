@@ -18,7 +18,7 @@ async function checkAuth() {
         // For V1 we'll try to fetch vouchers. If 401 -> redirect to login.
         const res = await fetch('/api/vouchers');
         if (res.status === 401) {
-            window.location.href = '/login/';
+            window.location.replace('/login/');
             return;
         }
 
@@ -114,10 +114,12 @@ function loadVouchers() {
         .then(data => {
             vouchersList.innerHTML = data.data.map(v => `
                 <div class="card">
+                    ${v.image_url ? `<img src="${v.image_url}" style="width:60px;height:40px;object-fit:cover;border-radius:4px;float:left;margin-right:10px;">` : ''}
                     <strong>${v.venue}</strong> (${v.category}) <br>
                     <em>${v.discount}</em> <br>
-                    <small>ID: ${v.id}</small>
+                    <small>ID: ${v.id} ${v.image_url ? '📷' : ''}</small>
                     <button class="button button-small delete-btn" onclick="deleteVoucher(${v.id})" style="float:right; margin-top:-20px;">X</button>
+                    <button class="button button-small button-outline" onclick="openEditVoucher(${v.id})" style="float:right; margin-top:-20px; margin-right:5px;">Edit</button>
                 </div>
             `).join('');
         });
@@ -202,37 +204,125 @@ bookingForm.addEventListener('submit', (e) => {
 
 voucherForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const voucher = {
-        venue: document.getElementById('v-venue').value,
-        category: document.getElementById('v-category').value,
-        categoryLabel: document.getElementById('v-category').options[document.getElementById('v-category').selectedIndex].text,
-        discount: document.getElementById('v-discount').value,
-        location: document.getElementById('v-location').value,
-        destination: document.getElementById('v-destination').value,
-        shortDesc: document.getElementById('v-shortDesc').value,
-        fullDesc: document.getElementById('v-fullDesc').value,
-        terms: document.getElementById('v-terms').value,
-        expiry: document.getElementById('v-expiry').value
-    };
+
+    // Use FormData for multipart upload (images)
+    const formData = new FormData();
+    formData.append('venue', document.getElementById('v-venue').value);
+    formData.append('category', document.getElementById('v-category').value);
+    formData.append('categoryLabel', document.getElementById('v-category').options[document.getElementById('v-category').selectedIndex].text);
+    formData.append('discount', document.getElementById('v-discount').value);
+    formData.append('location', document.getElementById('v-location').value);
+    formData.append('destination', document.getElementById('v-destination').value);
+    formData.append('shortDesc', document.getElementById('v-shortDesc').value);
+    formData.append('fullDesc', document.getElementById('v-fullDesc').value);
+    formData.append('terms', document.getElementById('v-terms').value);
+    formData.append('expiry', document.getElementById('v-expiry').value);
+
+    // Add images if selected
+    const imageFile = document.getElementById('voucher-image').files[0];
+    const logoFile = document.getElementById('voucher-logo').files[0];
+    if (imageFile) formData.append('image', imageFile);
+    if (logoFile) formData.append('logo', logoFile);
 
     fetch('/api/vouchers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(voucher)
+        body: formData  // No Content-Type header - browser sets it with boundary
     }).then(() => {
         voucherForm.reset();
         loadVouchers();
+        loadVouchersForChecklist(); // Refresh checklist too
     });
 });
 
 window.deleteBooking = (id) => {
     if (!confirm('Delete this booking code?')) return;
-    fetch(`/api/bookings/${id}`, { method: 'DELETE' }).then(loadBookings);
+    fetch(`/api/bookings/${id}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error deleting booking: ' + data.error);
+            } else {
+                loadBookings();
+            }
+        })
+        .catch(err => alert('Delete failed: ' + err.message));
 };
 
 window.deleteVoucher = (id) => {
     if (!confirm('Delete this voucher?')) return;
-    fetch(`/api/vouchers/${id}`, { method: 'DELETE' }).then(loadVouchers);
+    fetch(`/api/vouchers/${id}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error deleting voucher: ' + data.error);
+            } else {
+                loadVouchers();
+                loadVouchersForChecklist();
+            }
+        })
+        .catch(err => alert('Delete failed: ' + err.message));
+};
+
+// --- Edit Voucher Modal Logic ---
+let editingVoucherId = null;
+
+window.openEditVoucher = async (id) => {
+    editingVoucherId = id;
+    // Fetch voucher data
+    const res = await fetch('/api/vouchers');
+    const data = await res.json();
+    const voucher = data.data.find(v => v.id === id);
+    if (!voucher) return alert('Voucher not found');
+
+    // Populate form
+    document.getElementById('edit-v-venue').value = voucher.venue || '';
+    document.getElementById('edit-v-category').value = voucher.category || 'food';
+    document.getElementById('edit-v-discount').value = voucher.discount || '';
+    document.getElementById('edit-v-location').value = voucher.location || '';
+    document.getElementById('edit-v-destination').value = voucher.destination || '';
+    document.getElementById('edit-v-shortDesc').value = voucher.shortDesc || '';
+    document.getElementById('edit-v-fullDesc').value = voucher.fullDesc || '';
+    document.getElementById('edit-v-terms').value = voucher.terms || '';
+    document.getElementById('edit-v-expiry').value = voucher.expiry || '';
+
+    document.getElementById('modal-edit-voucher').style.display = 'flex';
+};
+
+window.closeEditVoucherModal = () => {
+    document.getElementById('modal-edit-voucher').style.display = 'none';
+    editingVoucherId = null;
+};
+
+window.saveVoucher = async () => {
+    if (!editingVoucherId) return;
+
+    const formData = new FormData();
+    formData.append('venue', document.getElementById('edit-v-venue').value);
+    formData.append('category', document.getElementById('edit-v-category').value);
+    formData.append('categoryLabel', document.getElementById('edit-v-category').options[document.getElementById('edit-v-category').selectedIndex].text);
+    formData.append('discount', document.getElementById('edit-v-discount').value);
+    formData.append('location', document.getElementById('edit-v-location').value);
+    formData.append('destination', document.getElementById('edit-v-destination').value);
+    formData.append('shortDesc', document.getElementById('edit-v-shortDesc').value);
+    formData.append('fullDesc', document.getElementById('edit-v-fullDesc').value);
+    formData.append('terms', document.getElementById('edit-v-terms').value);
+    formData.append('expiry', document.getElementById('edit-v-expiry').value);
+
+    // Add images if selected
+    const imageFile = document.getElementById('edit-voucher-image').files[0];
+    const logoFile = document.getElementById('edit-voucher-logo').files[0];
+    if (imageFile) formData.append('image', imageFile);
+    if (logoFile) formData.append('logo', logoFile);
+
+    await fetch(`/api/vouchers/${editingVoucherId}`, {
+        method: 'PUT',
+        body: formData
+    });
+
+    closeEditVoucherModal();
+    loadVouchers();
+    loadVouchersForChecklist();
+    alert('Voucher updated!');
 };
 
 // --- Init ---

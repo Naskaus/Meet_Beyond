@@ -23,21 +23,22 @@
     <section id="screen-activation" class="screen screen--active">
       <div class="activation">
         <div class="activation-logo">
-          <img src="logo.jpeg" alt="GoBeyond"
+          <img src="/logo.jpeg" alt="Get Beyond"
             style="width: 80px; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
         </div>
         <h1 class="activation-title">Voucher Wallet</h1>
-        <p class="activation-sub">Enter your booking reference to unlock exclusive deals at your destination.</p>
+        <p class="activation-sub">Enter your booking reference to unlock exclusive deals.</p>
         <form id="activation-form" class="activation-form">
           <input type="text" id="booking-input" class="activation-input" placeholder="e.g. BKK-2026-ABCD"
             autocomplete="off" spellcheck="false">
           <button type="submit" class="btn btn-primary btn-lg activation-btn" id="unlock-btn">
-            Unlock My Trip
+            Unlock My Offer
             <svg class="btn-arrow" viewBox="0 0 20 20" fill="none">
               <path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
                 stroke-linejoin="round" />
             </svg>
           </button>
+
         </form>
         <p class="activation-note">No account needed. Just your booking code.</p>
       </div>
@@ -50,7 +51,7 @@
           <h2 class="list-destination" id="list-destination">Bangkok</h2>
           <p class="list-subtitle">Your curated deals</p>
         </div>
-        <img src="logo.jpeg" alt="GoBeyond" class="list-header-logo"
+        <img src="/logo.jpeg" alt="GoBeyond" class="list-header-logo"
           style="width: 32px; height: 32px; border-radius: 6px;">
       </header>
       <div class="filter-bar" id="filter-bar">
@@ -141,10 +142,51 @@
       </div>
     </section>
 
-  </div>
+    <!-- REDEEM MODAL -->
+    <div id="modal-redeem" class="modal">
+      <div class="modal-content">
+        <h3 class="modal-title">Redeem Voucher</h3>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
-  <script src="app.js"></script>
+        <!-- Warning Section -->
+        <div class="redemption-warning">
+          <strong>⚠️ Warning</strong><br>
+          This action cannot be undone.<br>
+          Only staff should enter the PIN.
+        </div>
+
+        <p class="modal-text">Ask staff to enter their 4-digit PIN to validate.</p>
+
+        <div class="pin-display">
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+        </div>
+
+        <input type="number" id="pin-input" class="pin-input" pattern="\d*" inputmode="numeric">
+
+        <button class="btn btn-secondary mt-4" onclick="closeRedeemModal()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div id="modal-success" class="modal">
+      <div class="modal-content" style="text-align: center;">
+        <div style="color: var(--color-teal); margin-bottom: 16px;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <h3 class="modal-title">Redeemed!</h3>
+        <p class="modal-text">Enjoy your experience.</p>
+        <button class="btn btn-primary btn-lg" onclick="closeSuccessModal()">Close</button>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+    <script src="app.js?v=debug3"></script>
 </body>
 
 </html>

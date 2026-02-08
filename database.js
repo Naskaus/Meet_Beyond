@@ -29,6 +29,10 @@ db.serialize(() => {
     // Ignore error if column already exists
   });
 
+  // Migration: Add image_url and logo_url
+  db.run(`ALTER TABLE vouchers ADD COLUMN image_url TEXT`, (err) => { });
+  db.run(`ALTER TABLE vouchers ADD COLUMN logo_url TEXT`, (err) => { });
+
   // Create Vouchers Table (if not exists)
   db.run(`CREATE TABLE IF NOT EXISTS vouchers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,7 +46,10 @@ db.serialize(() => {
     terms TEXT,
     location TEXT,
     destination TEXT,
+    destination TEXT,
     expiry TEXT,
+    image_url TEXT,
+    logo_url TEXT,
     FOREIGN KEY(partner_id) REFERENCES users(id)
   )`);
 

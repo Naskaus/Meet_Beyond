@@ -2,30 +2,13 @@
   'use strict';
 
   // =============================
-  // Init
-  var bookingCode = localStorage.getItem('bookingCode');
+  // Init - ALWAYS clear booking code so travelers must re-enter
+  // =============================
+  localStorage.removeItem('bookingCode');
+  var bookingCode = null; // Force activation screen
   var vouchers = [];
   var selectedVoucher = null;
 
-  if (bookingCode) {
-    // Fetch vouchers visible for this booking code
-    fetch('/api/vouchers?booking_code=' + bookingCode)
-      .then(function (response) { return response.json(); })
-      .then(function (data) {
-        vouchers = data.data;
-        renderVoucherList();
-
-        // Use history state to restore view
-        if (window.location.hash === '#detail' && window.currentVoucherId) {
-          openVoucherDetail(window.currentVoucherId);
-        } else {
-          navigateTo('list');
-        }
-      })
-      .catch(function (err) { console.error(err); });
-  } else {
-    navigateTo('activation');
-  }
   // =============================
   // STATE
   // =============================
@@ -188,8 +171,15 @@
     }
 
     voucherListEl.innerHTML = filtered.map(function (v) {
+      var bgStyle = v.image_url ? 'style="background-image: url(\'' + v.image_url + '\')"' : '';
+      var logoImg = v.logo_url ? '<img src="' + v.logo_url + '" class="voucher-logo-overlay">' : '';
+      var redeemedBadge = v.is_redeemed ? '<div class="redeemed-badge">USED</div>' : '';
+      var redeemedClass = v.is_redeemed ? ' voucher-card--redeemed' : '';
+
       return (
-        '<div class="voucher-card" data-id="' + v.id + '">' +
+        '<div class="voucher-card' + redeemedClass + '" data-id="' + v.id + '" ' + bgStyle + '>' +
+        redeemedBadge +
+        logoImg +
         '<div class="voucher-card-top">' +
         '<span class="voucher-card-venue">' + escapeHtml(v.venue) + '</span>' +
         '<span class="voucher-card-discount">' + escapeHtml(v.discount) + '</span>' +
@@ -233,6 +223,18 @@
     // Reset terms collapse
     termsToggle.classList.remove('open');
     termsBody.classList.remove('open');
+
+    // Handle Redeemed State
+    var useBtn = document.getElementById('use-voucher-btn');
+    if (voucher.is_redeemed) {
+      useBtn.disabled = true;
+      useBtn.textContent = 'Voucher Used';
+      useBtn.classList.add('btn-disabled');
+    } else {
+      useBtn.disabled = false;
+      useBtn.textContent = 'Use Voucher';
+      useBtn.classList.remove('btn-disabled');
+    }
 
     navigateTo('detail');
   }
@@ -317,8 +319,12 @@
       .then(response => response.json())
       .then(data => {
         if (data.valid) {
-          navigateTo('list');
+          // Save code and load vouchers
+          // alert('Validation Successful! Loading vouchers...');
+          localStorage.setItem('bookingCode', val);
+          loadVouchers(val);
         } else {
+          // alert('Validation Failed: Invalid Code');
           bookingInput.classList.add('error');
           // Shake animation
           anime({
@@ -446,6 +452,9 @@
 
   window.closeSuccessModal = function () {
     document.getElementById('modal-success').classList.remove('active');
+    // Refresh vouchers to update redemption status
+    const code = localStorage.getItem('bookingCode');
+    if (code) loadVouchers(code);
     navigateTo('list');
   };
 
@@ -496,6 +505,49 @@
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
+  }
+
+  // =============================
+  // INIT LOGIC
+  // =============================
+  function loadVouchers(code) {
+    // Fetch vouchers visible for this booking code
+    console.log('Fetching vouchers for', code);
+    fetch('/api/vouchers?booking_code=' + code)
+      .then(function (response) {
+        if (response.status === 401) {
+          // If unauthorized (invalid code or session), go to activation
+          console.warn('Unauthorized booking code');
+          localStorage.removeItem('bookingCode');
+          navigateTo('activation');
+          return null;
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        if (!data) return;
+
+        console.log('Vouchers loaded:', data);
+        vouchers = data.data || [];
+        renderVoucherList();
+
+        // Use history state to restore view
+        if (window.location.hash === '#detail' && window.currentVoucherId) {
+          openVoucherDetail(window.currentVoucherId);
+        } else {
+          navigateTo('list');
+        }
+      })
+      .catch(function (err) { console.error(err); });
+  }
+
+  if (bookingCode) {
+    loadVouchers(bookingCode);
+  } else {
+    // Small delay to ensure transitions work if invoked immediately
+    setTimeout(function () {
+      navigateTo('activation');
+    }, 50);
   }
 
 })();

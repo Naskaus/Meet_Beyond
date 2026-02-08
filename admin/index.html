@@ -92,18 +92,25 @@
                         <fieldset>
                             <label for="booking-code">Booking Code (e.g. BKK-2026-XYZ)</label>
                             <input type="text" id="booking-code" required>
-                            
+
                             <!-- Voucher Visibility Selector -->
-                            <div style="margin-top: 20px; border: 1px solid var(--color-border); padding: 16px; border-radius: 8px;">
+                            <div
+                                style="margin-top: 20px; border: 1px solid var(--color-border); padding: 16px; border-radius: 8px;">
                                 <label>Visible Vouchers</label>
                                 <div style="margin-bottom: 10px;">
-                                    <button type="button" class="button button-small button-outline" onclick="selectAllVouchers(true)">Select All</button>
-                                    <button type="button" class="button button-small button-outline" onclick="selectAllVouchers(false)">Select None</button>
-                                    <button type="button" class="button button-small button-outline" onclick="selectVouchersByCat('Bangkok')">All Bangkok</button>
-                                    <button type="button" class="button button-small button-outline" onclick="selectVouchersByCat('Chiang Mai')">All Chiang Mai</button>
-                                    <button type="button" class="button button-small button-outline" onclick="selectVouchersByCat('Islands')">All Islands</button>
+                                    <button type="button" class="button button-small button-outline"
+                                        onclick="selectAllVouchers(true)">Select All</button>
+                                    <button type="button" class="button button-small button-outline"
+                                        onclick="selectAllVouchers(false)">Select None</button>
+                                    <button type="button" class="button button-small button-outline"
+                                        onclick="selectVouchersByCat('Bangkok')">All Bangkok</button>
+                                    <button type="button" class="button button-small button-outline"
+                                        onclick="selectVouchersByCat('Chiang Mai')">All Chiang Mai</button>
+                                    <button type="button" class="button button-small button-outline"
+                                        onclick="selectVouchersByCat('Islands')">All Islands</button>
                                 </div>
-                                <div id="voucher-checklist" style="max-height: 200px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                <div id="voucher-checklist"
+                                    style="max-height: 200px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                     <!-- Checkboxes injected by JS -->
                                     Loading vouchers...
                                 </div>
@@ -121,22 +128,83 @@
         </div>
 
         <!-- Edit Booking Modal -->
-        <div id="modal-edit-booking" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center;">
-             <div style="background:white; padding:32px; border-radius:12px; width:500px; max-width:90%;">
+        <div id="modal-edit-booking"
+            style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center;">
+            <div style="background:white; padding:32px; border-radius:12px; width:500px; max-width:90%;">
                 <h3>Edit Booking Visibility</h3>
                 <input type="hidden" id="edit-booking-id">
                 <div style="margin-bottom: 10px;">
-                    <button type="button" class="button button-small button-outline" onclick="selectEditVouchers(true)">Select All</button>
-                    <button type="button" class="button button-small button-outline" onclick="selectEditVouchers(false)">Select None</button>
+                    <button type="button" class="button button-small button-outline"
+                        onclick="selectEditVouchers(true)">Select All</button>
+                    <button type="button" class="button button-small button-outline"
+                        onclick="selectEditVouchers(false)">Select None</button>
                 </div>
-                <div id="edit-voucher-checklist" style="max-height: 300px; overflow-y: auto; display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom:20px;">
-                      <!-- Checkboxes injected -->
+                <div id="edit-voucher-checklist"
+                    style="max-height: 300px; overflow-y: auto; display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom:20px;">
+                    <!-- Checkboxes injected -->
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:10px;">
                     <button class="button button-outline" onclick="closeEditModal()">Cancel</button>
                     <button class="button button-primary" onclick="saveBookingVisibility()">Save Changes</button>
                 </div>
-             </div>
+            </div>
+        </div>
+
+        <!-- Edit Voucher Modal -->
+        <div id="modal-edit-voucher"
+            style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; overflow:auto;">
+            <div
+                style="background:white; padding:32px; border-radius:12px; width:600px; max-width:90%; margin:40px auto;">
+                <h3>Edit Voucher</h3>
+                <fieldset>
+                    <label>Venue Name</label>
+                    <input type="text" id="edit-v-venue" required>
+
+                    <label>Category</label>
+                    <select id="edit-v-category">
+                        <option value="food">Food & Drink</option>
+                        <option value="nightlife">Nightlife</option>
+                        <option value="activities">Activities</option>
+                        <option value="wellness">Wellness</option>
+                    </select>
+
+                    <label>Discount</label>
+                    <input type="text" id="edit-v-discount" required>
+
+                    <label>Location</label>
+                    <input type="text" id="edit-v-location" required>
+
+                    <label>Destination</label>
+                    <input type="text" id="edit-v-destination" required>
+
+                    <label>Description (Short)</label>
+                    <textarea id="edit-v-shortDesc" required></textarea>
+
+                    <label>Description (Full)</label>
+                    <textarea id="edit-v-fullDesc" required></textarea>
+
+                    <label>Terms</label>
+                    <textarea id="edit-v-terms" required></textarea>
+
+                    <label>Expiry</label>
+                    <input type="text" id="edit-v-expiry" required>
+
+                    <div class="row">
+                        <div class="col">
+                            <label>New Background Image (Optional)</label>
+                            <input type="file" id="edit-voucher-image" accept="image/*">
+                        </div>
+                        <div class="col">
+                            <label>New Logo (Optional)</label>
+                            <input type="file" id="edit-voucher-logo" accept="image/*">
+                        </div>
+                    </div>
+                </fieldset>
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                    <button class="button button-outline" onclick="closeEditVoucherModal()">Cancel</button>
+                    <button class="button button-primary" onclick="saveVoucher()">Save Changes</button>
+                </div>
+            </div>
         </div>
 
         <!-- Vouchers Section (All Roles) -->
@@ -178,6 +246,17 @@
 
                             <label>Expiry</label>
                             <input type="text" id="v-expiry" value="Dec 31, 2026" required>
+
+                            <div class="row">
+                                <div class="col">
+                                    <label>Background Image (Optional)</label>
+                                    <input type="file" id="voucher-image" accept="image/*">
+                                </div>
+                                <div class="col">
+                                    <label>Logo (Optional)</label>
+                                    <input type="file" id="voucher-logo" accept="image/*">
+                                </div>
+                            </div>
 
                             <button class="button-primary" type="submit">Add Voucher</button>
                         </fieldset>
