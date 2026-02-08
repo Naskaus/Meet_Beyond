@@ -98,14 +98,21 @@ function loadBookings() {
         .then(res => res.json())
         .then(data => {
             bookingsList.innerHTML = data.data.map(b => `
-                <div class="card">
-                    <strong>${b.code}</strong> 
-                    <button class="button button-small delete-btn" onclick="deleteBooking(${b.id})" style="float:right; margin-left:10px;">X</button>
-                    <button class="button button-small button-outline" onclick="openEditBooking(${b.id})" style="float:right;">Edit</button>
-                    <br><small>ID: ${b.id}</small> 
+                <div class="card" style="display:flex; align-items:center; justify-content:space-between; padding:16px; margin-bottom:12px; border-radius:12px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                    <div>
+                        <strong style="font-size:18px; color:#111;">${b.code}</strong>
+                        <div style="font-size:12px; color:#666; margin-top:4px;">ID: ${b.id}</div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="button button-small button-outline" onclick="openEditBooking(${b.id})" style="padding:8px 16px; border-radius:8px;">Edit</button>
+                        <button onclick="deleteBooking(${b.id})" style="width:36px; height:36px; border:none; background:#fee2e2; color:#dc2626; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6"/></svg>
+                        </button>
+                    </div>
                 </div>
             `).join('');
-        });
+        })
+        .catch(err => console.error('Failed to load bookings:', err));
 }
 
 function loadVouchers() {
@@ -113,17 +120,25 @@ function loadVouchers() {
         .then(res => res.json())
         .then(data => {
             vouchersList.innerHTML = data.data.map(v => `
-                <div class="card">
-                    ${v.image_url ? `<img src="${v.image_url}" style="width:60px;height:40px;object-fit:cover;border-radius:4px;float:left;margin-right:10px;">` : ''}
-                    <strong>${v.venue}</strong> (${v.category}) <br>
-                    <em>${v.discount}</em> <br>
-                    <small>ID: ${v.id} ${v.image_url ? '📷' : ''}</small>
-                    <button class="button button-small delete-btn" onclick="deleteVoucher(${v.id})" style="float:right; margin-top:-20px;">X</button>
-                    <button class="button button-small button-outline" onclick="openEditVoucher(${v.id})" style="float:right; margin-top:-20px; margin-right:5px;">Edit</button>
+                <div class="card" style="display:flex; align-items:center; gap:12px; padding:16px; margin-bottom:12px; border-radius:12px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                    ${v.image_url ? `<img src="${v.image_url}" style="width:56px; height:56px; object-fit:cover; border-radius:8px; flex-shrink:0;">` : '<div style="width:56px; height:56px; background:linear-gradient(135deg,#667eea,#764ba2); border-radius:8px; flex-shrink:0;"></div>'}
+                    <div style="flex:1; min-width:0;">
+                        <strong style="font-size:16px; color:#111; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.venue}</strong>
+                        <div style="font-size:13px; color:#666;">${v.discount}</div>
+                        <div style="font-size:11px; color:#999; margin-top:2px;">${v.category} • ID: ${v.id}</div>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-shrink:0;">
+                        <button class="button button-small button-outline" onclick="openEditVoucher(${v.id})" style="padding:8px 12px; border-radius:8px; font-size:12px;">Edit</button>
+                        <button onclick="deleteVoucher(${v.id})" style="width:36px; height:36px; border:none; background:#fee2e2; color:#dc2626; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6"/></svg>
+                        </button>
+                    </div>
                 </div>
             `).join('');
-        });
+        })
+        .catch(err => console.error('Failed to load vouchers:', err));
 }
+
 
 // --- Edit Modal Logic ---
 window.openEditBooking = async (id) => {
@@ -234,33 +249,51 @@ voucherForm.addEventListener('submit', (e) => {
     });
 });
 
-window.deleteBooking = (id) => {
-    if (!confirm('Delete this booking code?')) return;
-    fetch(`/api/bookings/${id}`, { method: 'DELETE' })
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) {
-                alert('Error deleting booking: ' + data.error);
-            } else {
-                loadBookings();
-            }
-        })
-        .catch(err => alert('Delete failed: ' + err.message));
+window.deleteBooking = async (id) => {
+    if (!confirm('🗑️ Delete this booking code? This cannot be undone.')) return;
+
+    try {
+        const res = await fetch(`/api/bookings/${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+            throw new Error(data.error || 'Server error');
+        }
+
+        // Success - reload list
+        loadBookings();
+        console.log('✅ Booking deleted:', id);
+    } catch (err) {
+        console.error('❌ Delete failed:', err);
+        alert('Delete failed: ' + err.message);
+    }
 };
 
-window.deleteVoucher = (id) => {
-    if (!confirm('Delete this voucher?')) return;
-    fetch(`/api/vouchers/${id}`, { method: 'DELETE' })
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) {
-                alert('Error deleting voucher: ' + data.error);
-            } else {
-                loadVouchers();
-                loadVouchersForChecklist();
-            }
-        })
-        .catch(err => alert('Delete failed: ' + err.message));
+window.deleteVoucher = async (id) => {
+    if (!confirm('🗑️ Delete this voucher? This cannot be undone.')) return;
+
+    try {
+        const res = await fetch(`/api/vouchers/${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+            throw new Error(data.error || 'Server error');
+        }
+
+        // Success - reload lists
+        loadVouchers();
+        loadVouchersForChecklist();
+        console.log('✅ Voucher deleted:', id);
+    } catch (err) {
+        console.error('❌ Delete failed:', err);
+        alert('Delete failed: ' + err.message);
+    }
 };
 
 // --- Edit Voucher Modal Logic ---
